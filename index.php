@@ -25,6 +25,25 @@ session_start();
 </head>
 <body>
 
+<?php
+
+// Verifica se o usuário está logado
+if (isset($_SESSION['perfil'])) {
+    // Verifica se o perfil é master
+    if ($_SESSION['perfil'] == 'master') {
+        // Exibe o botão de modo de edição
+        echo '<a href="editar_produto.php"><button class="btn editar">Modo de Edição</button></a>';
+    } else {
+        // Caso o usuário não seja master, exibe a mensagem
+        echo '<p>Você não tem permissão para editar.</p>';
+    }
+} else {
+    // Se não estiver logado, não exibe nada
+    echo '';
+}
+?>
+
+
     <!-- Navbar -->
 
     <header>

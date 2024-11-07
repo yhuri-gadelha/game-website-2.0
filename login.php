@@ -1,3 +1,4 @@
+
 <?php
 require 'db.php'; // Arquivo que faz a conexão com o banco de dados
 session_start(); // Inicia a sessão
@@ -14,28 +15,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Verifica se o usuário existe e se a senha está correta
     if ($usuario && password_verify($senha, $usuario['senha'])) {
-     // Armazena o email e as perguntas de segurança na sessão
+        // Armazena o ID do usuário na sessão
+        $_SESSION['user_id'] = $usuario['id'];  // Certifique-se de que a coluna é 'id'
         $_SESSION['email_2fa'] = $email;
-        $_SESSION['nome'] = $usuario['nome']; // Armazenando o nome do usuário
-        
+        $_SESSION['nome'] = $usuario['nome'];
+        $_SESSION['perfil'] = $usuario['perfil'];  // Armazena o perfil na sessão
+
+        // Armazena as perguntas de segurança, se necessário
         $_SESSION['perguntas'] = [
             ['pergunta' => $usuario['pergunta1'], 'resposta' => $usuario['resposta1']],
             ['pergunta' => $usuario['pergunta2'], 'resposta' => $usuario['resposta2']],
             ['pergunta' => $usuario['pergunta3'], 'resposta' => $usuario['resposta3']],
-     ];
+        ];
 
         // Escolhe uma pergunta aleatória
         $pergunta_escolhida = $_SESSION['perguntas'][array_rand($_SESSION['perguntas'])];
         $_SESSION['pergunta_selecionada'] = $pergunta_escolhida;
-        
-        // Redireciona para a página principal
-        header("Location: 2fa.php"); 
+
+        // Agora você pode verificar o perfil do usuário e redirecionar de acordo
+    if ($_SESSION['perfil'] === 'master') {
+        // Se for perfil "master", o redirecionamento pode ser diferente, como para um painel de administração, por exemplo
+        header("Location: editar_produto.php");  // Ajuste o redirecionamento conforme sua necessidade
+    } else {
+        // Se for perfil "comum", redireciona para a página padrão do usuário
+        header("Location: dashboard_comum.php");  // Ajuste o redirecionamento conforme sua necessidade
+    }
+
+        // Redireciona para a página de autenticação 2FA
+        header("Location: 2fa.php");
         exit();
     } else {
         $erro = "Email ou senha incorretos!";
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -94,7 +106,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="create">
 
-                <p><a href="cadastro.php">Não possui um login? Cadastre-se!</a></p>
+                <p><a href="cadastro.php">Cadastrar-se</a></p>
+
+
+            </div>
+
+
+            <div class="create">
+                
+
+                <p><a href="alterar_senha.php">Esqueci minha senha</a></p>
 
 
             </div>
