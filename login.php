@@ -13,6 +13,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->execute(['email' => $email]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    function registrarLog($pdo, $user_id, $nome_usuario, $perfil_usuario, $tentativas_2fa, $status) {
+        $sql_log = "INSERT INTO log_acesso (user_id, nome_usuario, perfil_usuario, tentativas_2fa, status) 
+                    VALUES (:user_id, :nome_usuario, :perfil_usuario, :tentativas_2fa, :status)";
+        $stmt_log = $pdo->prepare($sql_log);
+        $stmt_log->execute([
+            'user_id' => $user_id,
+            'nome_usuario' => $nome_usuario,
+            'perfil_usuario' => $perfil_usuario,
+            'tentativas_2fa' => $tentativas_2fa,
+            'status' => $status
+        ]);
+    }
+    
     // Verifica se o usuário existe e se a senha está correta
     if ($usuario && password_verify($senha, $usuario['senha'])) {
         // Armazena o ID do usuário na sessão
@@ -20,33 +33,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['email_2fa'] = $email;
         $_SESSION['nome'] = $usuario['nome'];
         $_SESSION['perfil'] = $usuario['perfil'];  // Armazena o perfil na sessão
-
+    
+        // Contabiliza tentativas do 2FA (exemplo de como controlar)
+        $tentativas_2fa = 0; // Inicia o contador de tentativas 2FA
+    
         // Armazena as perguntas de segurança, se necessário
         $_SESSION['perguntas'] = [
             ['pergunta' => $usuario['pergunta1'], 'resposta' => $usuario['resposta1']],
             ['pergunta' => $usuario['pergunta2'], 'resposta' => $usuario['resposta2']],
             ['pergunta' => $usuario['pergunta3'], 'resposta' => $usuario['resposta3']],
         ];
-
+    
         // Escolhe uma pergunta aleatória
         $pergunta_escolhida = $_SESSION['perguntas'][array_rand($_SESSION['perguntas'])];
         $_SESSION['pergunta_selecionada'] = $pergunta_escolhida;
-
+    
+        // Registra o log de sucesso no login
+        registrarLog($pdo, $_SESSION['user_id'], $_SESSION['nome'], $_SESSION['perfil'], $tentativas_2fa, 'sucesso');
+    
         // Agora você pode verificar o perfil do usuário e redirecionar de acordo
-    if ($_SESSION['perfil'] === 'master') {
-        // Se for perfil "master", o redirecionamento pode ser diferente, como para um painel de administração, por exemplo
-        header("Location: editar_produto.php");  // Ajuste o redirecionamento conforme sua necessidade
-    } else {
-        // Se for perfil "comum", redireciona para a página padrão do usuário
-        header("Location: dashboard_comum.php");  // Ajuste o redirecionamento conforme sua necessidade
-    }
-
+        if ($_SESSION['perfil'] === 'master') {
+            // Se for perfil "master", o redirecionamento pode ser diferente, como para um painel de administração, por exemplo
+            header("Location: editar_produto.php");  // Ajuste o redirecionamento conforme sua necessidade
+        } else {
+            // Se for perfil "comum", redireciona para a página padrão do usuário
+            header("Location: dashboard_comum.php");  // Ajuste o redirecionamento conforme sua necessidade
+        }
+    
         // Redireciona para a página de autenticação 2FA
         header("Location: 2fa.php");
         exit();
     } else {
+        // Caso a validação falhe, registra um log de falha
         $erro = "Email ou senha incorretos!";
+        registrarLog($pdo, $usuario['id'], $usuario['nome'], $usuario['perfil'], 0, 'falha');
     }
+    
 }
 ?>
 

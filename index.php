@@ -23,7 +23,7 @@ session_start();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"> 
     <!-- Serve para linkar o css do bootstrap mais facilmente. -->
 </head>
-<body>
+<body style="background-color: pink;">
 
 <?php
 
@@ -69,7 +69,7 @@ if (isset($_SESSION['perfil'])) {
                         <a href="MER/mer.html">MER</a>
                     </li>
                     <li>
-                        <a href="LOG/log.html">LOG</a>
+                        <a href="log.php">LOG</a>
                     </li>
                 </ul>
                 <div class="nav-actions">
